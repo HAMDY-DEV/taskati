@@ -18,6 +18,7 @@ class _HomeViewState extends State<HomeView> {
           Gap(40),
           //Header
           HomeHeader()
+          
         ],
       ),
     );
