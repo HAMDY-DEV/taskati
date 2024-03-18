@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:taskati/core/functions/routing.dart';
 import 'package:taskati/core/services/local_storage.dart';
 import 'package:taskati/core/utils/text_style.dart';
+import 'package:taskati/features/profile/presentation/view/profile.dart';
 
 class HomeHeader extends StatefulWidget {
   const HomeHeader({
@@ -40,11 +42,16 @@ class _HomeHeaderState extends State<HomeHeader> {
           ],
         ),
         const Spacer(),
-        CircleAvatar(
-          radius: 25,
-          backgroundImage: (path != null)
-              ? FileImage(File(path!)) as ImageProvider
-              : const AssetImage('assets/images/avatar.png'),
+        InkWell(
+          onTap: () {
+            navigateTo(context, const ProfileView());
+          },
+          child: CircleAvatar(
+            radius: 25,
+            backgroundImage: (path != null)
+                ? FileImage(File(path!)) as ImageProvider
+                : const AssetImage('assets/images/avatar.png'),
+          ),
         ),
         const Gap(10),
       ],

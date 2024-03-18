@@ -1,6 +1,10 @@
+import 'package:date_picker_timeline/extra/color.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:taskati/core/services/local_storage.dart';
 import 'package:taskati/core/utils/colors.dart';
 import 'package:taskati/core/utils/text_style.dart';
+import 'package:taskati/features/addTask/data/task_model.dart';
 import 'package:taskati/features/addTask/presentation/widgets/custom_text_filde.dart';
 
 class AddTask extends StatefulWidget {
@@ -11,6 +15,14 @@ class AddTask extends StatefulWidget {
 }
 
 class _AddTaslState extends State<AddTask> {
+  var date = DateFormat('dd/MM/yyyy').format(DateTime.now());
+  var startTime = DateFormat('hh:mm a').format(DateTime.now());
+  var endTime = DateFormat('hh:mm a')
+      .format(DateTime.now().add(const Duration(minutes: 30)));
+  int color = 0;
+  var tatileController = TextEditingController();
+  var noteController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,20 +43,38 @@ class _AddTaslState extends State<AddTask> {
               CustomTextFilde(
                 text: 'Title',
                 hint: 'Enter title here',
+                controller: tatileController,
               ),
               const SizedBox(
                 height: 20,
               ),
               CustomTextFilde(
                 text: 'Note',
+                maxLines: 4,
+                controller: noteController,
                 hint: 'Enter note here',
               ),
               const SizedBox(
                 height: 20,
               ),
               CustomTextFilde(
+                readOnly: true,
+                onTap: () {
+                  showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(DateTime.now()
+                              .add(const Duration(days: 365))
+                              .year))
+                      .then((value) => {
+                            setState(() {
+                              date = DateFormat.yMd().format(value!);
+                            })
+                          });
+                },
                 text: 'Date',
-                hint: '10/30/2023',
+                hint: date,
                 widget: const Icon(Icons.date_range_rounded),
               ),
               const SizedBox(
@@ -54,8 +84,21 @@ class _AddTaslState extends State<AddTask> {
                 children: [
                   Expanded(
                     child: CustomTextFilde(
+                      onTap: () {
+                        showTimePicker(
+                                context: context, initialTime: TimeOfDay.now())
+                            .then((value) => {
+                                  if (value != null)
+                                    {
+                                      setState(() {
+                                        startTime = value.format(context);
+                                      })
+                                    }
+                                });
+                      },
+                      readOnly: true,
                       text: 'Start',
-                      hint: '02:30 AM',
+                      hint: startTime,
                       widget: const Icon(Icons.access_time),
                     ),
                   ),
@@ -64,8 +107,21 @@ class _AddTaslState extends State<AddTask> {
                   ),
                   Expanded(
                     child: CustomTextFilde(
+                      readOnly: true,
                       text: 'End Time',
-                      hint: '02:45 AM',
+                      hint: endTime,
+                      onTap: () {
+                        showTimePicker(
+                                context: context, initialTime: TimeOfDay.now())
+                            .then((value) => {
+                                  if (value != null)
+                                    {
+                                      setState(() {
+                                        endTime = value.format(context);
+                                      })
+                                    }
+                                });
+                      },
                       widget: const Icon(Icons.access_time),
                     ),
                   ),
@@ -87,26 +143,33 @@ class _AddTaslState extends State<AddTask> {
                         ),
                       ),
                       Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: AppColoes.primary,
-                            radius: 10,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          CircleAvatar(
-                            backgroundColor: AppColoes.red,
-                            radius: 10,
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          CircleAvatar(
-                            backgroundColor: AppColoes.orange,
-                            radius: 10,
-                          ),
-                        ],
+                        children: List.generate(3, (index) {
+                          return Padding(
+                            padding: const EdgeInsets.all(3.0),
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  color = index;
+                                });
+                              },
+                              child: CircleAvatar(
+                                backgroundColor: index == 0
+                                    ? AppColoes.primary
+                                    : index == 1
+                                        ? AppColoes.red
+                                        : AppColoes.orange,
+                                radius: 10,
+                                child: color == index
+                                    ? Icon(
+                                        Icons.check,
+                                        size: 15,
+                                        color: AppColoes.white,
+                                      )
+                                    : const SizedBox(),
+                              ),
+                            ),
+                          );
+                        }),
                       )
                     ],
                   ),
@@ -114,7 +177,20 @@ class _AddTaslState extends State<AddTask> {
                   SizedBox(
                     width: 125,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        String id = '${tatileController.text}${DateTime.now()}';
+                        AppLocalStorage.cachTask(
+                            key: id,
+                            value: TaskModel(false,
+                                id: id,
+                                title: tatileController.text,
+                                note: noteController.text,
+                                date: date,
+                                startTime: startTime,
+                                endTime: endTime,
+                                color: color));
+                        print(AppLocalStorage.getCachTask(key: id)!.title);
+                      },
                       style: ElevatedButton.styleFrom(
                           backgroundColor: AppColoes.primary,
                           foregroundColor: AppColoes.white,
